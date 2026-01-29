@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Web3 Avatar Demo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h2>Web3-based Digital Identity Demo</h2>
+    <button id="connectBtn">Connect Wallet</button>
+    <p id="walletAddress">Not connected</p>
+
+    <div id="avatar-container"></div>
+    
+    <div id="avatar-controls" style="display: none;">
+      <button id="refreshBtn">Generate New Avatar</button>
+      <button id="submitBtn">✓ Use This Avatar</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="three/avatar.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
