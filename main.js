@@ -5,12 +5,34 @@ const walletAddressEl = document.getElementById("walletAddress");
 const avatarControls = document.getElementById("avatar-controls");
 const refreshBtn = document.getElementById("refreshBtn");
 const submitBtn = document.getElementById("submitBtn");
+const mintBtn = document.getElementById("mintBtn");
 const avatarContainer = document.getElementById("avatar-container");
 
 let isConnecting = false;
 let currentWalletAddress = null;
 let currentSeed = 0;
 let selectedAvatar = null;
+let nftContract = null; // NFT Contract instance
+
+// Initialize NFT Contract
+async function initNFTContract() {
+  try {
+    nftContract = new NFTContract();
+    await nftContract.initialize();
+    
+    const mintPrice = await nftContract.getMintPrice();
+    const totalMinted = await nftContract.getTotalMinted();
+    
+    console.log("✅ NFT Contract ready!");
+    console.log("Mint price:", mintPrice, "ETH");
+    console.log("Total minted:", totalMinted);
+    
+    return true;
+  } catch (error) {
+    console.error("Failed to initialize NFT contract:", error);
+    return false;
+  }
+}
 
 connectBtn.addEventListener("click", async () => {
   if (isConnecting) {
@@ -31,6 +53,20 @@ connectBtn.addEventListener("click", async () => {
       const account = accounts[0];
       currentWalletAddress = account;
       walletAddressEl.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+      
+      // Initialize NFT contract
+      const contractReady = await initNFTContract();
+      
+      if (contractReady) {
+        // Check if user already has an avatar
+        const hasAvatar = await nftContract.hasAvatar(account);
+        if (hasAvatar) {
+          const tokenId = await nftContract.getAvatarByWallet(account);
+          walletAddressEl.textContent += ` | NFT #${tokenId} owned ✅`;
+          mintBtn.textContent = "Already Minted ✓";
+          mintBtn.disabled = true;
+        }
+      }
       
       // Generate initial avatar
       if (window.updateAvatar) {
@@ -72,12 +108,10 @@ refreshBtn.addEventListener("click", () => {
     currentSeed++;
     window.updateAvatar(currentWalletAddress, currentSeed);
     
-    // Remove selected state
     avatarContainer.classList.remove("selected");
     selectedAvatar = null;
     submitBtn.disabled = false;
     
-    // Remove success message if exists
     const successMsg = document.querySelector(".success-message");
     if (successMsg) {
       successMsg.remove();
@@ -94,20 +128,105 @@ submitBtn.addEventListener("click", () => {
       timestamp: new Date().toISOString()
     };
     
-    // Visual feedback
     avatarContainer.classList.add("selected");
     submitBtn.disabled = true;
     
-    // Save to localStorage
     localStorage.setItem("selectedAvatar", JSON.stringify(selectedAvatar));
     
-    // Show success message
     const successMsg = document.createElement("p");
     successMsg.className = "success-message";
-    successMsg.textContent = "✓ Avatar selected and saved!";
+    successMsg.textContent = "✓ Avatar selected! Ready to mint as NFT";
     avatarControls.appendChild(successMsg);
     
+    // Enable mint button
+    mintBtn.disabled = false;
+    
     console.log("Avatar selected:", selectedAvatar);
+  }
+});
+
+// Mint button - mint as NFT
+mintBtn.addEventListener("click", async () => {
+  if (!currentWalletAddress || !selectedAvatar) {
+    alert("Please connect wallet and select an avatar first!");
+    return;
+  }
+  
+  if (!nftContract) {
+    alert("NFT contract not initialized. Please reconnect your wallet.");
+    return;
+  }
+  
+  try {
+    mintBtn.disabled = true;
+    mintBtn.textContent = "Checking...";
+    
+    // Check if already has avatar
+    const hasAvatar = await nftContract.hasAvatar(currentWalletAddress);
+    if (hasAvatar) {
+      alert("You already minted an avatar NFT!");
+      mintBtn.textContent = "Already Minted ✓";
+      return;
+    }
+    
+    // Get mint price
+    const mintPrice = await nftContract.getMintPrice();
+    const confirmMint = confirm(
+      `Mint your avatar as NFT?\n\n` +
+      `Price: ${mintPrice} ETH\n` +
+      `Seed: ${selectedAvatar.seed}\n\n` +
+      `Click OK to proceed.`
+    );
+    
+    if (!confirmMint) {
+      mintBtn.disabled = false;
+      mintBtn.textContent = "🎨 Mint as NFT";
+      return;
+    }
+    
+    mintBtn.textContent = "Preparing...";
+    
+    // For now, use a simple metadata URI (you'll add IPFS later)
+    const metadataURI = `data:application/json;base64,${btoa(JSON.stringify({
+      name: `Web3 Avatar #${selectedAvatar.seed}`,
+      description: "Unique Minecraft-style avatar generated from wallet address",
+      attributes: [
+        { trait_type: "Seed", value: selectedAvatar.seed },
+        { trait_type: "Wallet", value: currentWalletAddress.slice(0, 10) + "..." }
+      ]
+    }))}`;
+    
+    mintBtn.textContent = "Minting NFT...";
+    
+    const receipt = await nftContract.mintAvatar(selectedAvatar.seed, metadataURI);
+    
+    mintBtn.textContent = "✓ Minted!";
+    
+    alert(
+      `NFT minted successfully! 🎉\n\n` +
+      `Transaction: ${receipt.transactionHash}\n\n` +
+      `View on Sepolia Etherscan:\n` +
+      `https://sepolia.etherscan.io/tx/${receipt.transactionHash}`
+    );
+    
+    // Update UI
+    walletAddressEl.textContent = `Connected: ${currentWalletAddress.slice(0, 6)}...${currentWalletAddress.slice(-4)} | NFT Minted ✅`;
+    
+  } catch (error) {
+    console.error("Minting failed:", error);
+    
+    let errorMessage = "Minting failed: ";
+    if (error.code === 4001) {
+      errorMessage += "Transaction rejected by user";
+    } else if (error.message.includes("insufficient funds")) {
+      errorMessage += "Insufficient funds for gas";
+    } else {
+      errorMessage += error.message || "Unknown error";
+    }
+    
+    alert(errorMessage);
+    mintBtn.textContent = "🎨 Mint as NFT";
+    mintBtn.disabled = false;
   }
 });
 
@@ -123,6 +242,19 @@ window.addEventListener("load", async () => {
         const account = accounts[0];
         currentWalletAddress = account;
         walletAddressEl.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+        
+        // Initialize contract
+        const contractReady = await initNFTContract();
+        
+        if (contractReady) {
+          const hasAvatar = await nftContract.hasAvatar(account);
+          if (hasAvatar) {
+            const tokenId = await nftContract.getAvatarByWallet(account);
+            walletAddressEl.textContent += ` | NFT #${tokenId} owned ✅`;
+            mintBtn.textContent = "Already Minted ✓";
+            mintBtn.disabled = true;
+          }
+        }
         
         // Load saved avatar if exists
         const savedAvatar = localStorage.getItem("selectedAvatar");
