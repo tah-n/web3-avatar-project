@@ -2,25 +2,184 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Web3 Avatar Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 Avatar - Digital Identity Platform</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h2>Web3-based Digital Identity Demo</h2>
-    <button id="connectBtn">Connect Wallet</button>
-    <p id="walletAddress">Not connected</p>
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="logo">
+          <h1>🎭 Web3 Avatar</h1>
+          <p class="tagline">Your Digital Identity on Blockchain</p>
+        </div>
+        <div class="header-actions">
+          <button id="connectBtn" class="btn btn-primary">
+            <span class="btn-icon">🔗</span>
+            Connect Wallet
+          </button>
+          <button id="disconnectBtn" class="btn btn-secondary" style="display: none;">
+            <span class="btn-icon">🔌</span>
+            Disconnect
+          </button>
+        </div>
+      </div>
+    </header>
 
-    <div id="avatar-container"></div>
-    
-    <div id="avatar-controls" style="display: none;">
-      <button id="refreshBtn">Generate New Avatar</button>
-      <button id="submitBtn">✓ Use This Avatar</button>
-      <button id="mintBtn" disabled>🎨 Mint as NFT</button>
-    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <div class="content-grid">
+          
+          <!-- Left Column - Wallet Info & Instructions -->
+          <div class="left-column">
+            <div class="card wallet-card">
+              <h2>👛 Wallet Status</h2>
+              <div class="wallet-info">
+                <div class="status-badge" id="connectionStatus">
+                  <span class="status-dot"></span>
+                  <span id="walletAddress">Not connected</span>
+                </div>
+                <div id="networkInfo" style="display: none;">
+                  <p class="network-name">
+                    <span class="label">Network:</span>
+                    <span id="networkName">-</span>
+                  </p>
+                  <p class="wallet-balance">
+                    <span class="label">Balance:</span>
+                    <span id="walletBalance">-</span> ETH
+                  </p>
+                </div>
+              </div>
+            </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+            <div class="card info-card">
+              <h2>📖 How it Works</h2>
+              <ol class="steps-list">
+                <li>
+                  <span class="step-number">1</span>
+                  <div class="step-content">
+                    <strong>Connect Wallet</strong>
+                    <p>Connect your MetaMask wallet to get started</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">2</span>
+                  <div class="step-content">
+                    <strong>Generate Avatar</strong>
+                    <p>Your unique 3D avatar will be created from your wallet address</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">3</span>
+                  <div class="step-content">
+                    <strong>Customize</strong>
+                    <p>Click "Refresh" to generate different variations</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="step-number">4</span>
+                  <div class="step-content">
+                    <strong>Mint as NFT</strong>
+                    <p>Save your avatar as an NFT on the blockchain</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div class="card stats-card" id="contractStats" style="display: none;">
+              <h2>📊 Contract Stats</h2>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Total Minted</span>
+                  <span class="stat-value" id="totalMinted">0</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Mint Price</span>
+                  <span class="stat-value" id="mintPrice">0.001 ETH</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Your NFT ID</span>
+                  <span class="stat-value" id="userTokenId">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Avatar Display & Actions -->
+          <div class="right-column">
+            <div class="card avatar-card">
+              <div class="avatar-header">
+                <h2>🎨 Your Avatar</h2>
+                <div class="avatar-seed" id="avatarSeed" style="display: none;">
+                  Seed: <span id="seedNumber">0</span>
+                </div>
+              </div>
+
+              <div id="avatar-container" class="avatar-container">
+                <div class="avatar-placeholder">
+                  <div class="placeholder-icon">🎭</div>
+                  <p>Connect your wallet to generate avatar</p>
+                </div>
+              </div>
+
+              <div id="avatar-controls" class="avatar-controls" style="display: none;">
+                <div class="controls-row">
+                  <button id="refreshBtn" class="btn btn-refresh">
+                    <span class="btn-icon">🔄</span>
+                    Generate New
+                  </button>
+                  <button id="submitBtn" class="btn btn-select">
+                    <span class="btn-icon">✓</span>
+                    Select This
+                  </button>
+                </div>
+                <button id="mintBtn" class="btn btn-mint" disabled>
+                  <span class="btn-icon">🎨</span>
+                  Mint as NFT
+                </button>
+                <div id="successMessage" class="success-message" style="display: none;">
+                  <span class="success-icon">✓</span>
+                  <span class="success-text">Avatar selected! Ready to mint</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="card tips-card">
+              <h3>💡 Tips</h3>
+              <ul class="tips-list">
+                <li>🖱️ <strong>Drag</strong> to rotate the avatar</li>
+                <li>🔍 <strong>Scroll</strong> to zoom in/out</li>
+                <li>🔄 Each wallet generates unique avatars</li>
+                <li>💎 You can only mint one NFT per wallet</li>
+              </ul>
+            </div> -->
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>Built with ❤️ using Web3 Technology</p>
+        <div class="footer-links">
+          <a href="https://sepolia.etherscan.io/address/0xC18E0D09e1B6F406a0E4a6447A5acdA5075f17be" target="_blank">View Contract</a>
+          <span>•</span>
+          <a href="https://github.com/tah-n/web3-avatar-project" target="_blank">GitHub</a>
+          <span>•</span>
+          <a href="#" id="docsLink">Documentation</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Load libraries -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
+    <!-- Load your scripts -->
     <script src="nft-contract.js"></script>
     <script src="three/avatar.js"></script>
     <script src="main.js"></script>
